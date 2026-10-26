@@ -4,6 +4,8 @@ Extensión para VS Code y sus derivados (Cursor, Windsurf, VSCodium…) que mues
 
 Compara el **% de la cuota que llevas usada** con el **% de tiempo que ha pasado desde tu último corte**:
 
+![Claude Quota Pace en la barra de estado](images/screenshot.webp)
+
 `✓ Claude 34% / 40% (−6)` → usaste 34 % de la cuota, pasó 40 % del período y vas 6 puntos **por debajo** del ritmo óptimo.
 
 - Amarillo cuando vas 5 puntos o más por encima del ritmo (`warnAbove`), rojo desde 15 (`errorAbove`).
@@ -15,7 +17,7 @@ Compara el **% de la cuota que llevas usada** con el **% de tiempo que ha pasado
 1. Descarga el `.vsix` de la [última release](https://github.com/lorspi/claude-usage-pace/releases/latest).
 2. En VS Code: `Extensiones → … → Install from VSIX…`, o en la terminal:
    ```bash
-   code --install-extension claude-quota-pace-0.1.2.vsix
+   code --install-extension claude-quota-pace-0.1.3.vsix
    ```
 
 ## Uso

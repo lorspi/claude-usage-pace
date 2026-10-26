@@ -2,7 +2,7 @@
   "name": "claude-quota-pace",
   "displayName": "Claude Quota Pace",
   "description": "Compara el % de cuota de Claude Code consumido contra el % de tiempo transcurrido desde tu último corte.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "lorspi",
   "icon": "images/icon.png",
   "galleryBanner": {

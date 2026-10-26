@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 — 2026-10-26
+
+- Captura de pantalla en el README (GitHub, Marketplace y Open VSX).
+
 ## 0.1.2 — 2026-10-26
 
 - Nuevo nombre: **Claude Quota Pace** (`claude-quota-pace`), porque `claude-usage-pace` ya estaba ocupado en el Marketplace.
