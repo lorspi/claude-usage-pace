@@ -1,0 +1,149 @@
+{
+  "name": "claude-usage-pace",
+  "displayName": "Claude Usage Pace",
+  "description": "Compara el % de cuota de Claude Code consumido contra el % de tiempo transcurrido desde tu último corte.",
+  "version": "0.1.0",
+  "publisher": "lorspi",
+  "license": "MIT",
+  "author": "Juan",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lorspi/claude-usage-pace.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lorspi/claude-usage-pace/issues"
+  },
+  "homepage": "https://github.com/lorspi/claude-usage-pace#readme",
+  "keywords": [
+    "claude",
+    "claude code",
+    "anthropic",
+    "usage",
+    "quota"
+  ],
+  "scripts": {
+    "test": "node test/pace.test.js",
+    "package": "npx @vscode/vsce@3 package"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "claudeUsagePace.refresh",
+        "title": "Claude Usage: Actualizar ahora"
+      },
+      {
+        "command": "claudeUsagePace.setCutoff",
+        "title": "Claude Usage: Configurar fecha y hora de corte"
+      },
+      {
+        "command": "claudeUsagePace.syncCutoff",
+        "title": "Claude Usage: Tomar el corte desde Claude (resets_at)"
+      },
+      {
+        "command": "claudeUsagePace.setManualPercent",
+        "title": "Claude Usage: Ingresar % de uso manualmente"
+      },
+      {
+        "command": "claudeUsagePace.openSettings",
+        "title": "Claude Usage: Abrir configuración"
+      }
+    ],
+    "configuration": {
+      "title": "Claude Usage Pace",
+      "properties": {
+        "claudeUsagePace.cutoff": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Fecha y hora (hora local) de **un** corte cualquiera, pasado o futuro. Formato `YYYY-MM-DD HH:mm`, p. ej. `2026-11-02 16:59`. Los demás cortes se calculan repitiendo el período."
+        },
+        "claudeUsagePace.period": {
+          "type": "string",
+          "enum": [
+            "weekly",
+            "monthly",
+            "custom"
+          ],
+          "enumDescriptions": [
+            "Cada 7 días",
+            "Mismo día cada mes",
+            "Cada N días (claudeUsagePace.periodDays)"
+          ],
+          "default": "weekly",
+          "description": "Cada cuánto se repite el corte."
+        },
+        "claudeUsagePace.periodDays": {
+          "type": "number",
+          "default": 7,
+          "minimum": 1,
+          "description": "Días entre cortes cuando el período es 'custom'."
+        },
+        "claudeUsagePace.quota": {
+          "type": "string",
+          "enum": [
+            "seven_day",
+            "seven_day_opus",
+            "seven_day_sonnet",
+            "extra_usage"
+          ],
+          "enumDescriptions": [
+            "Límite semanal (todos los modelos)",
+            "Límite semanal de Opus",
+            "Límite semanal de Sonnet",
+            "Créditos de uso extra (mensual)"
+          ],
+          "default": "seven_day",
+          "description": "Qué cuota de Claude se compara contra el tiempo."
+        },
+        "claudeUsagePace.source": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "manual"
+          ],
+          "enumDescriptions": [
+            "Lee el uso desde tu sesión de Claude Code",
+            "Usa el % ingresado con el comando 'Ingresar % de uso manualmente'"
+          ],
+          "default": "auto",
+          "description": "De dónde se obtiene el % de uso."
+        },
+        "claudeUsagePace.manualPercent": {
+          "type": "number",
+          "default": 0,
+          "description": "% de uso cuando source = manual."
+        },
+        "claudeUsagePace.refreshSeconds": {
+          "type": "number",
+          "default": 120,
+          "minimum": 30,
+          "description": "Cada cuántos segundos se consulta el uso."
+        },
+        "claudeUsagePace.warnAbove": {
+          "type": "number",
+          "default": 5,
+          "description": "Puntos porcentuales por encima del ritmo óptimo a partir de los cuales se muestra advertencia (amarillo)."
+        },
+        "claudeUsagePace.errorAbove": {
+          "type": "number",
+          "default": 15,
+          "description": "Puntos porcentuales por encima del ritmo óptimo a partir de los cuales se muestra alerta (rojo)."
+        },
+        "claudeUsagePace.credentialsPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Ruta a `.credentials.json` de Claude Code. Vacío = `~/.claude/.credentials.json` (en macOS también se intenta el Llavero)."
+        }
+      }
+    }
+  }
+}

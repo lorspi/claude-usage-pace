@@ -1,0 +1,4 @@
+test/**
+*.vsix
+DESARROLLO.md
+.gitignore
