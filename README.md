@@ -15,7 +15,7 @@ Compara el **% de la cuota que llevas usada** con el **% de tiempo que ha pasado
 1. Descarga el `.vsix` de la [última release](https://github.com/lorspi/claude-usage-pace/releases/latest).
 2. En VS Code: `Extensiones → … → Install from VSIX…`, o en la terminal:
    ```bash
-   code --install-extension claude-usage-pace-0.1.0.vsix
+   code --install-extension claude-usage-pace-0.1.1.vsix
    ```
 
 ## Uso

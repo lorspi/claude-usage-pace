@@ -2,8 +2,13 @@
   "name": "claude-usage-pace",
   "displayName": "Claude Usage Pace",
   "description": "Compara el % de cuota de Claude Code consumido contra el % de tiempo transcurrido desde tu último corte.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "lorspi",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#201E1C",
+    "theme": "dark"
+  },
   "license": "MIT",
   "author": "Juan",
   "repository": {
@@ -29,7 +34,8 @@
     "vscode": "^1.80.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Visualization"
   ],
   "main": "./src/extension.js",
   "activationEvents": [
