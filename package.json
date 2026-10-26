@@ -1,8 +1,8 @@
 {
-  "name": "claude-usage-pace",
-  "displayName": "Claude Usage Pace",
+  "name": "claude-quota-pace",
+  "displayName": "Claude Quota Pace",
   "description": "Compara el % de cuota de Claude Code consumido contra el % de tiempo transcurrido desde tu último corte.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "lorspi",
   "icon": "images/icon.png",
   "galleryBanner": {
@@ -65,7 +65,7 @@
       }
     ],
     "configuration": {
-      "title": "Claude Usage Pace",
+      "title": "Claude Quota Pace",
       "properties": {
         "claudeUsagePace.cutoff": {
           "type": "string",

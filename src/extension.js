@@ -193,7 +193,7 @@ async function setManualPercent() {
 
 function activate(context) {
   item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  item.name = 'Claude Usage Pace';
+  item.name = 'Claude Quota Pace';
   item.show();
 
   context.subscriptions.push(

@@ -1,4 +1,4 @@
-# Claude Usage Pace
+# Claude Quota Pace
 
 Extensión para VS Code y sus derivados (Cursor, Windsurf, VSCodium…) que muestra en la barra de estado si estás usando tu cuota de Claude Code más rápido o más lento de lo que te conviene.
 
@@ -15,7 +15,7 @@ Compara el **% de la cuota que llevas usada** con el **% de tiempo que ha pasado
 1. Descarga el `.vsix` de la [última release](https://github.com/lorspi/claude-usage-pace/releases/latest).
 2. En VS Code: `Extensiones → … → Install from VSIX…`, o en la terminal:
    ```bash
-   code --install-extension claude-usage-pace-0.1.1.vsix
+   code --install-extension claude-quota-pace-0.1.2.vsix
    ```
 
 ## Uso
