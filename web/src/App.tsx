@@ -13,7 +13,7 @@ import { useNow } from "@/hooks/useNow";
 import { formatLocal } from "@/lib/pace";
 import type { Account } from "@/lib/types";
 
-const AUTO_REFRESH_MS = 120000;
+const AUTO_REFRESH_MS = 600000;
 
 const Dashboard = () => {
   const { accounts, addAccount, updateAccount, removeAccount, refreshAccount } = useAccounts();
