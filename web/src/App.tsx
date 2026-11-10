@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -13,26 +13,11 @@ import { useNow } from "@/hooks/useNow";
 import { formatLocal } from "@/lib/pace";
 import type { Account } from "@/lib/types";
 
-const AUTO_REFRESH_MS = 600000;
-
 const Dashboard = () => {
   const { accounts, addAccount, updateAccount, removeAccount, refreshAccount } = useAccounts();
   const now = useNow(30000);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Account | null>(null);
-
-  const accountsRef = useRef(accounts);
-  accountsRef.current = accounts;
-
-  // Refresco automático de las cuentas conectadas a la API.
-  useEffect(() => {
-    const id = setInterval(() => {
-      accountsRef.current
-        .filter((a) => a.source === "auto" && a.token)
-        .forEach((a) => refreshAccount(a, true));
-    }, AUTO_REFRESH_MS);
-    return () => clearInterval(id);
-  }, [refreshAccount]);
 
   const openNew = () => {
     setEditing(null);

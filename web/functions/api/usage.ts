@@ -6,28 +6,30 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const CACHE_TTL = 90;
+// TTL de caché por tipo de respuesta. Los errores transitorios (403/429) se
+// cachean menos tiempo para no "castigar" demasiado al usuario, pero lo
+// suficiente para no martillear a Anthropic cuando está bloqueando.
+const CACHE_TTL_OK = 120;
+const CACHE_TTL_ERROR = 30;
 
-async function getCachedUsage(token: string): Promise<Response | null> {
-  const cache = caches.default;
-  const cacheKey = new Request("https://claude-quota-pace.local/api/usage", {
+function cacheKeyFor(token: string): Request {
+  return new Request("https://claude-quota-pace.local/api/usage", {
     headers: { "x-claude-token": token },
   });
-  const cached = await cache.match(cacheKey);
+}
+
+async function getCached(token: string): Promise<Response | null> {
+  const cached = await caches.default.match(cacheKeyFor(token));
   return cached ?? null;
 }
 
-async function setCachedUsage(token: string, response: Response): Promise<void> {
-  const cache = caches.default;
-  const cacheKey = new Request("https://claude-quota-pace.local/api/usage", {
-    headers: { "x-claude-token": token },
-  });
+async function setCached(token: string, response: Response, ttl: number): Promise<void> {
   const copy = new Response(response.body, {
     status: response.status,
     headers: response.headers,
   });
-  copy.headers.append("Cache-Control", `public, max-age=${CACHE_TTL}`);
-  await cache.put(cacheKey, copy);
+  copy.headers.append("Cache-Control", `public, max-age=${ttl}`);
+  await caches.default.put(cacheKeyFor(token), copy);
 }
 
 export async function onRequestPost({ request }: { request: Request }): Promise<Response> {
@@ -39,12 +41,16 @@ export async function onRequestPost({ request }: { request: Request }): Promise<
     });
   }
 
-  const cached = await getCachedUsage(token);
+  const cached = await getCached(token);
   if (cached) {
     const body = await cached.text();
     return new Response(body, {
       status: cached.status,
-      headers: { ...corsHeaders, "content-type": cached.headers.get("content-type") || "application/json", "x-cache": "HIT" },
+      headers: {
+        ...corsHeaders,
+        "content-type": cached.headers.get("content-type") || "application/json",
+        "x-cache": "HIT",
+      },
     });
   }
 
@@ -54,9 +60,11 @@ export async function onRequestPost({ request }: { request: Request }): Promise<
     headers: { ...corsHeaders, "content-type": contentType, "x-cache": "MISS" },
   });
 
-  // Solo cacheamos respuestas exitosas (2xx) para no guardar errores transitorios.
-  if (status >= 200 && status < 300) {
-    await setCachedUsage(token, response);
+  // Cacheamos tanto respuestas buenas como errores transitorios para no
+  // martillear a Anthropic (sobre todo 403 del WAF y 429 de rate limit).
+  if ((status >= 200 && status < 300) || status === 403 || status === 429) {
+    const ttl = status >= 200 && status < 300 ? CACHE_TTL_OK : CACHE_TTL_ERROR;
+    await setCached(token, response, ttl);
   }
 
   return response;
