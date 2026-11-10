@@ -93,6 +93,8 @@ Requisito previo: haber iniciado sesión al menos una vez con `claude` en esa m�
 
 ## Despliegue en Cloudflare Pages
 
+**En producción:** https://claude-quota-pace.pages.dev/ (proyecto `claude-quota-pace`, cuenta `lorspi`).
+
 El proyecto es un SPA estático, así que se despliega la carpeta `dist/`.
 
 ### Con Wrangler (CLI)
