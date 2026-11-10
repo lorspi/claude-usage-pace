@@ -6,9 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// TTL de caché por tipo de respuesta. Los errores transitorios (403/429) se
-// cachean menos tiempo para no "castigar" demasiado al usuario, pero lo
-// suficiente para no martillear a Anthropic cuando está bloqueando.
 const CACHE_TTL_OK = 120;
 const CACHE_TTL_ERROR = 30;
 
@@ -19,55 +16,76 @@ function cacheKeyFor(token: string): Request {
 }
 
 async function getCached(token: string): Promise<Response | null> {
-  const cached = await caches.default.match(cacheKeyFor(token));
-  return cached ?? null;
+  try {
+    const cached = await caches.default.match(cacheKeyFor(token));
+    return cached ?? null;
+  } catch {
+    return null;
+  }
 }
 
 async function setCached(token: string, response: Response, ttl: number): Promise<void> {
-  const copy = new Response(response.body, {
-    status: response.status,
-    headers: response.headers,
+  try {
+    const copy = new Response(response.body, {
+      status: response.status,
+      headers: response.headers,
+    });
+    copy.headers.append("Cache-Control", `public, max-age=${ttl}`);
+    await caches.default.put(cacheKeyFor(token), copy);
+  } catch {
+    /* si la caché falla, no pasa nada: seguimos sin cachear */
+  }
+}
+
+function jsonError(status: number, message: string, cacheHit = false): Response {
+  return new Response(JSON.stringify({ error: { type: "proxy_error", message } }), {
+    status,
+    headers: {
+      ...corsHeaders,
+      "content-type": "application/json",
+      "x-cache": cacheHit ? "HIT" : "MISS",
+    },
   });
-  copy.headers.append("Cache-Control", `public, max-age=${ttl}`);
-  await caches.default.put(cacheKeyFor(token), copy);
 }
 
 export async function onRequestPost({ request }: { request: Request }): Promise<Response> {
-  const token = request.headers.get("x-claude-token");
-  if (!token) {
-    return new Response(JSON.stringify({ error: "missing token" }), {
-      status: 400,
-      headers: { ...corsHeaders, "content-type": "application/json" },
+  try {
+    const token = request.headers.get("x-claude-token");
+    if (!token) {
+      return jsonError(400, "missing token");
+    }
+
+    const cached = await getCached(token);
+    if (cached) {
+      const body = await cached.text();
+      return new Response(body, {
+        status: cached.status,
+        headers: {
+          ...corsHeaders,
+          "content-type": cached.headers.get("content-type") || "application/json",
+          "x-cache": "HIT",
+        },
+      });
+    }
+
+    const { status, body, contentType } = await proxyAnthropicUsage(token);
+    const response = new Response(body, {
+      status,
+      headers: { ...corsHeaders, "content-type": contentType, "x-cache": "MISS" },
     });
+
+    // Cacheamos tanto respuestas buenas como errores transitorios (403/429)
+    // para no martillear a Anthropic.
+    if ((status >= 200 && status < 300) || status === 403 || status === 429) {
+      const ttl = status >= 200 && status < 300 ? CACHE_TTL_OK : CACHE_TTL_ERROR;
+      await setCached(token, response, ttl);
+    }
+
+    return response;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return jsonError(502, `Proxy error: ${message}`);
   }
-
-  const cached = await getCached(token);
-  if (cached) {
-    const body = await cached.text();
-    return new Response(body, {
-      status: cached.status,
-      headers: {
-        ...corsHeaders,
-        "content-type": cached.headers.get("content-type") || "application/json",
-        "x-cache": "HIT",
-      },
-    });
-  }
-
-  const { status, body, contentType } = await proxyAnthropicUsage(token);
-  const response = new Response(body, {
-    status,
-    headers: { ...corsHeaders, "content-type": contentType, "x-cache": "MISS" },
-  });
-
-  // Cacheamos tanto respuestas buenas como errores transitorios para no
-  // martillear a Anthropic (sobre todo 403 del WAF y 429 de rate limit).
-  if ((status >= 200 && status < 300) || status === 403 || status === 429) {
-    const ttl = status >= 200 && status < 300 ? CACHE_TTL_OK : CACHE_TTL_ERROR;
-    await setCached(token, response, ttl);
-  }
-
-  return response;
 }
 
 export async function onRequestOptions(): Promise<Response> {
