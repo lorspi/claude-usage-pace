@@ -85,11 +85,13 @@ Requisito previo: haber iniciado sesión al menos una vez con `claude` en esa m�
 
 - **Caducidad**: el `accessToken` del archivo dura pocas horas y lo renueva Claude Code. En la web no
   hay refresco automático, así que tendrías que volver a copiarlo; por eso la Opción A es mejor.
-- **Seguridad**: es una credencial de tu cuenta. La web la guarda en `localStorage` (texto plano) y
-  solo la envía a `api.anthropic.com`. No la compartas ni la pegues en equipos de terceros.
-- **CORS**: aunque el token sea válido, la petición sale del navegador. Si Anthropic no devuelve
-  cabeceras CORS, fallará y verás el error en la tarjeta. En ese caso, usa el **% manual**: la web
-  calcula el ritmo igual y no necesitas ningún token.
+- **Seguridad**: es una credencial de tu cuenta. La web la guarda en `localStorage` (texto plano).
+  Nunca se envía directamente a terceros desde el navegador: pasa por el proxy `/api/usage` del
+  propio sitio (una Pages Function en Cloudflare), que reenvía la petición a `api.anthropic.com`.
+  No la compartas ni la pegues en equipos de terceros.
+- **CORS / bloqueadores**: como la llamada sale del navegador hacia el mismo origen (`/api/usage`),
+  no hay restricciones CORS ni la bloquean los ad-blockers. Si Anthropic rechaza el token verás un
+  `401`; en ese caso renueva la sesión o usa el **% manual**.
 
 ## Despliegue en Cloudflare Pages
 
@@ -125,5 +127,6 @@ npx wrangler pages deploy dist --project-name claude-quota-pace --branch main
    - **Build output directory**: `dist`
 4. **Save and Deploy**. Cada push a esa rama redepliega.
 
-> El endpoint de la API de Anthropic sigue sujeto a CORS desde el navegador, también en producción.
-> El modo manual funciona en cualquier caso.
+> `wrangler pages deploy` detecta automáticamente la carpeta `functions/` del proyecto y publica la
+> Pages Function `/api/usage`, que hace de proxy a Anthropic evitando CORS. El modo manual sigue
+> funcionando sin token.
