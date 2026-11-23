@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <clipPath id="rounded">
+      <rect width="512" height="512" rx="110" ry="110"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="110" ry="110" fill="#1a1c20"/>
+
+  <!-- Donut ring — dark segment (left ~180°) -->
+  <path
+    d="M256,80
+       A176,176 0 0,0 80,256
+       A176,176 0 0,0 256,432
+       L256,380
+       A124,124 0 0,1 132,256
+       A124,124 0 0,1 256,132
+       Z"
+    fill="#2e3038"
+  />
+
+  <!-- Donut ring — accent segment (right ~180°) -->
+  <path
+    d="M256,80
+       A176,176 0 0,1 432,256
+       A176,176 0 0,1 256,432
+       L256,380
+       A124,124 0 0,0 380,256
+       A124,124 0 0,0 256,132
+       Z"
+    fill="#c1694f"
+  />
+
+  <!-- Gap notch at top to visually separate segments -->
+  <rect x="250" y="76" width="12" height="60" fill="#1a1c20"/>
+
+  <!-- Clock face -->
+  <circle cx="256" cy="256" r="88" fill="#1a1c20"/>
+
+  <!-- Hour hand (pointing ~11 o'clock) -->
+  <line x1="256" y1="256" x2="225" y2="202" stroke="#f5efe8" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Minute hand (pointing ~3 o'clock) -->
+  <line x1="256" y1="256" x2="316" y2="256" stroke="#f5efe8" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Center dot -->
+  <circle cx="256" cy="256" r="10" fill="#f5efe8"/>
+
+  <!-- Tick mark at left (gap indicator like the original) -->
+  <rect x="76" y="249" width="38" height="14" rx="7" fill="#f5efe8"/>
+</svg>

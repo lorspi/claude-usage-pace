@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { VitePWA } from "vite-plugin-pwa";
 import { proxyAnthropicUsage } from "./src/lib/proxy-usage";
 
 /**
@@ -50,12 +51,72 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
-    allowedHosts: ["test.lorspi.com"],
+    allowedHosts: ["test.lorspi.com", "test2.lorspi.com"],
     hmr: {
       overlay: false,
     },
   },
-  plugins: [react(), devUsageProxy()],
+  plugins: [
+    react(),
+    devUsageProxy(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon-32x32.png", "favicon-16x16.png", "apple-touch-icon.png"],
+      manifest: {
+        name: "Claude Quota Pace",
+        short_name: "Quota Pace",
+        description: "Mide el uso de tus cuentas de Claude contra el tiempo de corte.",
+        theme_color: "#1a1c20",
+        background_color: "#1a1c20",
+        display: "standalone",
+        orientation: "portrait-primary",
+        scope: "/",
+        start_url: "/",
+        lang: "es",
+        icons: [
+          {
+            src: "pwa-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+          {
+            src: "pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts-cache",
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "gstatic-fonts-cache",
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

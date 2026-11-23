@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
-import { ArrowClockwise, ArrowUp, CheckCircle, Flame, PencilSimple, Trash, Warning } from "@phosphor-icons/react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowClockwise, ArrowUp, CaretDown, CheckCircle, Flame, PencilSimple, Trash, Warning } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { computePace, cycleBounds, formatDuration, formatLocal, parseLocal } from "@/lib/pace";
 import { PERIOD_LABELS, QUOTA_LABELS, type Account } from "@/lib/types";
@@ -76,10 +75,19 @@ export function AccountCard({
   onUseApiCutoff,
 }: AccountCardProps) {
   const [percent, setPercent] = useState(String(account.manualPercent));
+  const [editing, setEditing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setPercent(String(account.manualPercent));
   }, [account.manualPercent]);
+
+  const startEditing = () => {
+    setEditing(true);
+    // seleccionar todo el texto en el siguiente tick
+    setTimeout(() => inputRef.current?.select(), 0);
+  };
 
   const commitPercent = () => {
     const value = Number(percent.replace(",", "."));
@@ -88,6 +96,12 @@ export function AccountCard({
     } else {
       setPercent(String(account.manualPercent));
     }
+    setEditing(false);
+  };
+
+  const cancelEdit = () => {
+    setPercent(String(account.manualPercent));
+    setEditing(false);
   };
 
   const anchor = parseLocal(account.cutoff);
@@ -178,9 +192,48 @@ export function AccountCard({
 
         <div className="mt-5 flex items-center justify-between gap-4">
           <div className="flex items-baseline gap-2">
-            <span className={cn("text-4xl font-bold font-heading tabular-nums", tone.text)}>
-              {fmt(p.usagePct, 0)}%
-            </span>
+            {account.source === "manual" ? (
+              <span
+                className={cn("relative flex items-baseline gap-0", tone.text)}
+                title="Clic para editar"
+              >
+                {editing ? (
+                  <input
+                    ref={inputRef}
+                    value={percent}
+                    inputMode="decimal"
+                    className={cn(
+                      "text-4xl font-bold font-heading tabular-nums bg-transparent outline-none",
+                      "border-b-2 border-current w-[3ch] min-w-[2ch] max-w-[5ch]",
+                      tone.text,
+                    )}
+                    style={{ width: `${Math.max(2, percent.length)}ch` }}
+                    onChange={(e) => setPercent(e.target.value)}
+                    onBlur={commitPercent}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitPercent();
+                      if (e.key === "Escape") cancelEdit();
+                    }}
+                  />
+                ) : (
+                  <span
+                    className={cn(
+                      "text-4xl font-bold font-heading tabular-nums cursor-text",
+                      "border-b-2 border-transparent hover:border-current/40 transition-colors",
+                      tone.text,
+                    )}
+                    onClick={startEditing}
+                  >
+                    {fmt(p.usagePct, 0)}
+                  </span>
+                )}
+                <span className={cn("text-4xl font-bold font-heading", tone.text)}>%</span>
+              </span>
+            ) : (
+              <span className={cn("text-4xl font-bold font-heading tabular-nums", tone.text)}>
+                {fmt(p.usagePct, 0)}%
+              </span>
+            )}
             <span className="text-2xl font-semibold font-heading text-muted-foreground tabular-nums">
               / {fmt(p.timePct, 0)}%
             </span>
@@ -203,43 +256,52 @@ export function AccountCard({
           <Bar label="Tiempo transcurrido" value={p.timePct} barClass="bg-muted-foreground/40" />
         </div>
 
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-          <Stat label="Último corte" value={formatLocal(last)} />
-          <Stat label="Próximo corte" value={`${formatLocal(next)} · en ${formatDuration(p.remainingMs)}`} />
+        {/* Proyección + Ritmo: una línea en móvil */}
+        <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3">
           <Stat label="Proyección al corte" value={`${fmt(p.projected)}%`} />
-          <Stat label="Ritmo disponible" value={`${fmt(p.budgetPerHour, 2)}% por hora`} />
+          <Stat label="Ritmo disponible" value={`${fmt(p.budgetPerHour, 2)}% / h`} />
           {p.catchUpMs > 0 && (
-            <Stat label="Vuelves al ritmo sin usar Claude en" value={formatDuration(p.catchUpMs)} />
+            <div className="col-span-2">
+              <Stat label="Vuelves al ritmo sin usar Claude en" value={formatDuration(p.catchUpMs)} />
+            </div>
           )}
           {session && typeof session.utilization === "number" && (
-            <Stat
-              label="Sesión de 5 h"
-              value={`${fmt(session.utilization)}%${
-                session.resets_at ? ` · reinicia ${formatLocal(new Date(session.resets_at))}` : ""
-              }`}
-            />
+            <div className="col-span-2">
+              <Stat
+                label="Sesión de 5 h"
+                value={`${fmt(session.utilization)}%${
+                  session.resets_at ? ` · reinicia ${formatLocal(new Date(session.resets_at))}` : ""
+                }`}
+              />
+            </div>
           )}
         </div>
 
+        {/* Último corte / Próximo corte — colapsables */}
+        <button
+          className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+        >
+          <CaretDown
+            weight="bold"
+            className={cn("w-3.5 h-3.5 transition-transform duration-200", expanded && "rotate-180")}
+          />
+          {expanded ? "Ocultar cortes" : "Ver cortes"}
+        </button>
+
+        {expanded && (
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 animate-fade-in">
+            <Stat label="Último corte" value={formatLocal(last)} />
+            <Stat label="Próximo corte" value={`${formatLocal(next)} · en ${formatDuration(p.remainingMs)}`} />
+          </div>
+        )}
+
         <div className="mt-5 pt-4 border-t flex flex-wrap items-center justify-between gap-3">
           {account.source === "manual" ? (
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-muted-foreground" htmlFor={`pct-${account.id}`}>
-                % de uso
-              </label>
-              <Input
-                id={`pct-${account.id}`}
-                value={percent}
-                inputMode="decimal"
-                className="w-24 h-9"
-                onChange={(e) => setPercent(e.target.value)}
-                onBlur={commitPercent}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                }}
-              />
-              <span className="text-sm text-muted-foreground">/ 100</span>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Toca el número para editar el porcentaje
+            </p>
           ) : (
             <p className="text-sm text-muted-foreground">
               {account.lastFetch
