@@ -37,18 +37,33 @@ const TONES = {
   danger: { text: "text-red-600 dark:text-red-400", bar: "bg-red-500", chip: "bg-red-500/10" },
 };
 
-function Bar({ label, value, barClass }: { label: string; value: number; barClass: string }) {
-  const clamped = Math.min(100, Math.max(0, value));
+function PacedBar({
+  usagePct,
+  timePct,
+  barClass,
+}: {
+  usagePct: number;
+  timePct: number;
+  barClass: string;
+}) {
+  const clampedUsage = Math.min(100, Math.max(0, usagePct));
+  const clampedTime = Math.min(100, Math.max(0, timePct));
   return (
     <div>
-      <div className="flex items-center justify-between text-xs mb-1">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="tabular-nums text-muted-foreground">{fmt(value)}%</span>
+      <div className="flex items-center justify-between text-xs mb-1.5">
+        <span className="text-muted-foreground tabular-nums">Uso {fmt(usagePct)}%</span>
+        <span className="text-muted-foreground tabular-nums">Tiempo {fmt(timePct)}%</span>
       </div>
-      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+      <div className="relative h-2 w-full rounded-full bg-muted overflow-visible">
+        {/* Relleno de uso */}
         <div
-          className={cn("h-full rounded-full transition-all duration-500", barClass)}
-          style={{ width: `${clamped}%` }}
+          className={cn("absolute inset-y-0 left-0 rounded-full transition-all duration-500", barClass)}
+          style={{ width: `${clampedUsage}%` }}
+        />
+        {/* Pin de tiempo transcurrido */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-0.5 h-4 rounded-full bg-muted-foreground/70 transition-all duration-500"
+          style={{ left: `${clampedTime}%` }}
         />
       </div>
     </div>
@@ -246,9 +261,8 @@ export function AccountCard({
         </div>
         <p className={cn("mt-1 text-sm font-medium", tone.text)}>{deltaText}</p>
 
-        <div className="mt-5 space-y-3">
-          <Bar label="Cuota usada" value={p.usagePct} barClass={tone.bar} />
-          <Bar label="Tiempo transcurrido" value={p.timePct} barClass="bg-muted-foreground/40" />
+        <div className="mt-5">
+          <PacedBar usagePct={p.usagePct} timePct={p.timePct} barClass={tone.bar} />
         </div>
 
         {/* Desplegable: proyección, ritmo, cortes y extras */}
