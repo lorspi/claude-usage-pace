@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Plus } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Header } from "@/components/Header";
@@ -68,20 +70,28 @@ const Dashboard = () => {
         {accounts.length === 0 ? (
           <EmptyState onAdd={openNew} />
         ) : (
-          <div className="grid gap-6">
-            {accounts.map((account) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                now={now}
-                onEdit={openEdit}
-                onDelete={handleDelete}
-                onRefresh={(a) => refreshAccount(a)}
-                onSetPercent={handleSetPercent}
-                onUseApiCutoff={handleUseApiCutoff}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-6">
+              {accounts.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  now={now}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  onRefresh={(a) => refreshAccount(a)}
+                  onSetPercent={handleSetPercent}
+                  onUseApiCutoff={handleUseApiCutoff}
+                />
+              ))}
+            </div>
+            <div className="mt-6 flex justify-center sm:hidden">
+              <Button onClick={openNew} size="lg" className="w-full">
+                <Plus weight="bold" />
+                Agregar cuenta
+              </Button>
+            </div>
+          </>
         )}
 
         <Footer />
