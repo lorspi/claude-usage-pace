@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowClockwise, ArrowUp, CaretDown, CheckCircle, Flame, PencilSimple, Trash, Warning } from "@phosphor-icons/react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { computePace, cycleBounds, formatDuration, formatLocal, parseLocal } from "@/lib/pace";
-import { PERIOD_LABELS, QUOTA_LABELS, type Account } from "@/lib/types";
+import { type Account } from "@/lib/types";
 
 interface AccountCardProps {
   account: Account;
@@ -113,12 +112,8 @@ export function AccountCard({
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
         <h2 className="font-heading font-semibold text-lg truncate">{account.name}</h2>
-        <p className="text-sm text-muted-foreground">{QUOTA_LABELS[account.quota]}</p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        <Badge variant="outline" className="mr-1 hidden sm:inline-flex">
-          {PERIOD_LABELS[account.period]}
-        </Badge>
         {account.source === "auto" && (
           <Button variant="ghost" size="icon" title="Actualizar uso" onClick={() => onRefresh(account)}>
             <ArrowClockwise weight="bold" />
@@ -256,28 +251,7 @@ export function AccountCard({
           <Bar label="Tiempo transcurrido" value={p.timePct} barClass="bg-muted-foreground/40" />
         </div>
 
-        {/* Proyección + Ritmo: una línea en móvil */}
-        <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3">
-          <Stat label="Proyección al corte" value={`${fmt(p.projected)}%`} />
-          <Stat label="Ritmo disponible" value={`${fmt(p.budgetPerHour, 2)}% / h`} />
-          {p.catchUpMs > 0 && (
-            <div className="col-span-2">
-              <Stat label="Vuelves al ritmo sin usar Claude en" value={formatDuration(p.catchUpMs)} />
-            </div>
-          )}
-          {session && typeof session.utilization === "number" && (
-            <div className="col-span-2">
-              <Stat
-                label="Sesión de 5 h"
-                value={`${fmt(session.utilization)}%${
-                  session.resets_at ? ` · reinicia ${formatLocal(new Date(session.resets_at))}` : ""
-                }`}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Último corte / Próximo corte — colapsables */}
+        {/* Desplegable: proyección, ritmo, cortes y extras */}
         <button
           className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => setExpanded((v) => !v)}
@@ -287,28 +261,43 @@ export function AccountCard({
             weight="bold"
             className={cn("w-3.5 h-3.5 transition-transform duration-200", expanded && "rotate-180")}
           />
-          {expanded ? "Ocultar cortes" : "Ver cortes"}
+          {expanded ? "Ocultar detalles" : "Ver detalles"}
         </button>
 
         {expanded && (
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 animate-fade-in">
+          <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 animate-fade-in">
+            <Stat label="Proyección al corte" value={`${fmt(p.projected)}%`} />
+            <Stat label="Ritmo disponible" value={`${fmt(p.budgetPerHour, 2)}% / h`} />
             <Stat label="Último corte" value={formatLocal(last)} />
             <Stat label="Próximo corte" value={`${formatLocal(next)} · en ${formatDuration(p.remainingMs)}`} />
+            {p.catchUpMs > 0 && (
+              <div className="col-span-2">
+                <Stat label="Vuelves al ritmo sin usar Claude en" value={formatDuration(p.catchUpMs)} />
+              </div>
+            )}
+            {session && typeof session.utilization === "number" && (
+              <div className="col-span-2">
+                <Stat
+                  label="Sesión de 5 h"
+                  value={`${fmt(session.utilization)}%${
+                    session.resets_at ? ` · reinicia ${formatLocal(new Date(session.resets_at))}` : ""
+                  }`}
+                />
+              </div>
+            )}
           </div>
         )}
 
         <div className="mt-5 pt-4 border-t flex flex-wrap items-center justify-between gap-3">
-          {account.source === "manual" ? (
-            <p className="text-sm text-muted-foreground">
-              Toca el número para editar el porcentaje
-            </p>
-          ) : (
+          {account.source === "auto" ? (
             <p className="text-sm text-muted-foreground">
               {account.lastFetch
                 ? `Actualizado ${new Date(account.lastFetch).toLocaleTimeString()}`
                 : "Sin actualizar"}
               {account.lastError && <span className="text-red-500"> · {account.lastError}</span>}
             </p>
+          ) : (
+            <div />
           )}
 
           <div className="flex flex-wrap items-center gap-2">
