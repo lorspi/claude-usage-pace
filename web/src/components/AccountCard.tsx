@@ -265,6 +265,13 @@ export function AccountCard({
           <PacedBar usagePct={p.usagePct} timePct={p.timePct} barClass={tone.bar} />
         </div>
 
+        {/* CatchUp visible fuera del desplegable */}
+        {p.catchUpMs > 0 && (
+          <p className="mt-3 text-sm text-muted-foreground">
+            Vuelves al ritmo sin usar Claude en <span className="font-semibold text-foreground">{formatDuration(p.catchUpMs)}</span>
+          </p>
+        )}
+
         {/* Desplegable: proyección, ritmo, cortes y extras */}
         <button
           className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -284,11 +291,6 @@ export function AccountCard({
             <Stat label="Ritmo disponible" value={`${fmt(p.budgetPerHour, 2)}% / h`} />
             <Stat label="Último corte" value={formatLocal(last)} />
             <Stat label="Próximo corte" value={`${formatLocal(next)} · en ${formatDuration(p.remainingMs)}`} />
-            {p.catchUpMs > 0 && (
-              <div className="col-span-2">
-                <Stat label="Vuelves al ritmo sin usar Claude en" value={formatDuration(p.catchUpMs)} />
-              </div>
-            )}
             {session && typeof session.utilization === "number" && (
               <div className="col-span-2">
                 <Stat
