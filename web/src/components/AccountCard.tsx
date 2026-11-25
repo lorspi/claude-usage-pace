@@ -268,7 +268,7 @@ export function AccountCard({
         {/* CatchUp visible fuera del desplegable */}
         {p.catchUpMs > 0 && (
           <p className="mt-3 text-sm text-muted-foreground">
-            Vuelves al ritmo sin usar Claude en <span className="font-semibold text-foreground">{formatDuration(p.catchUpMs)}</span>
+            Vuelves al ritmo en <span className="font-semibold text-foreground">{formatDuration(p.catchUpMs)}</span>
           </p>
         )}
 
